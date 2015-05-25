@@ -86,21 +86,23 @@ meanq.df.exag[meanq.df.exag$k==3 & meanq.df.exag$k.value.run==3, ]$q.value <- me
 # DISTRUCT-type plot
 
 meanq.df%>%
-  filter(k.value.run==2) %>%
+  filter(k.value.run==4) %>%
   arrange(pop)%>%
   ggplot(aes(x=id, y=q.value, fill=factor(k)))+
   #ggplot(aes(x=id, y=q.value, fill=factor(pop)))+
     geom_bar(stat="identity", width=1)+
+    #geom_bar(aes(x=id,fill=pop, y=.01),stat="identity",width=1,position="stack")+
     #geom_text(aes(label=pop))+
     theme_classic()+
     theme(axis.text.x=element_blank(), 
           axis.ticks=element_blank(), 
           axis.line=element_blank(),
-          axis.title=element_blank())
+          axis.title=element_blank())+
+    facet_wrap(~pop, scales="free")
 
 meanq.df%>%
   filter(k.value.run==2) %>%
-  group_by(pop) %>%
+  group_by(pop,id) %>%
   mutate(q.max=max(q.value))%>%
   ungroup() %>%
   arrange(q.max)%>%
@@ -114,9 +116,9 @@ meanq.df%>%
         axis.line=element_blank(),
         axis.title=element_blank())
 
-assignment<-c()
-for (i in 1:length(meanq.df$qvalue)){
-  if meanq.df$qvalue >0.0
-}
+meanq.df%>%
+  filter(k.value.run==2) %>%
+  group_by(pop,id) %>%
+  mutate(q.order=max(q.value)
     
   
