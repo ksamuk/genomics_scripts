@@ -86,7 +86,7 @@ meanq.df.exag[meanq.df.exag$k==3 & meanq.df.exag$k.value.run==3, ]$q.value <- me
 # DISTRUCT-type plot
 
 meanq.df%>%
-  filter(k.value.run==4) %>%
+  filter(k.value.run==3) %>%
   arrange(pop)%>%
   ggplot(aes(x=id, y=q.value, fill=factor(k)))+
   #ggplot(aes(x=id, y=q.value, fill=factor(pop)))+

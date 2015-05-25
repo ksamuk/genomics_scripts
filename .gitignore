@@ -3,3 +3,4 @@
 .RData
 *.bam
 *.bai
+*.vcf
