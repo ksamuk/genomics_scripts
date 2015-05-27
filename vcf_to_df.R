@@ -7,6 +7,7 @@ library("dplyr")
 library("magrittr")
 library("ggplot2")
 library("hierfstat")
+library("data.table")
 
 # read vcf file to 1/1 snp table
 
@@ -74,6 +75,52 @@ whtcmn.df$ref.count <- as.numeric(whtcmn.df$geno1==0) + as.numeric(whtcmn.df$gen
 whtcmn.df$alt.count <- as.numeric(whtcmn.df$geno1==1) + as.numeric(whtcmn.df$geno2==1)
 
 # aaaah..that's better.
+
+rm(list=c("whtcmn.gbs","geno1","geno2","id","pop","alt","ref","pos","lg"))
+gc()
+
+#assign genotypes
+build.geno <- function (x){
+  if(is.na(x[7])|is.na(x[8])){
+    return("NN")
+  }else{
+    return(paste0(rep(x[5],x[9]),rep(x[6],x[10]),collapse=""))
+  }
+}
+
+whtcmn.df$genotype <- rep("NN",length(whtcmn.df$genotype))
+whtcmn.df$genotype <- apply(whtcmn.df[1:10,], MARGIN=1, build.geno)
+
+whtcmn.df.fixed %>%
+  
+
+
+apply(whtcmn.df[1:10,], MARGIN=1, build.geno)
+
+# write geno.df to file
+
+gz1 <- gzfile("whtcmn.df.gz", "w")
+write.csv(whtcmn.df, gz1, row.names = FALSE)
+close(gz1)
+
+whtcmn.df <- read.csv("whtcmn.df.gz", row.names = NULL)
+
+#output "fake" FASTA file
+
+df.to.fasta2 <- function (pop, id , genotype) {
+  header <- paste0(">",pop[1],"_",id[1],"\n")
+  dna <- paste0(genotype,collapse="")
+  return(paste0(header,dna))
+}
+
+data.table(whtcmn.df)[, list(fasta=df.to.fasta2(pop,id,genotype)), by=key(whtcmn.df)]$fasta %>%
+writeLines(file("test.fasta"))
+
+whtcmn.df %>%
+  filter(pop=="AL") %>%
+  group_by(id)%>%
+  summarise_each(funs(df.to.fasta)) %>%
+  writeLines(file("test.fasta"))
 
 # read in structure classes
 

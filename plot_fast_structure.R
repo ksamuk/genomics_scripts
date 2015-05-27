@@ -96,13 +96,8 @@ meanq.df <- meanq.df %>%
 # DISTRUCT-type plot
 
 
-meanq.df %>%
-  filter(k.value.run==3) %>%
-  group_by(id) %>%
-  
-
 meanq.df%>%
-  filter(k.value.run==2) %>%
+  filter(k.value.run==3) %>%
   arrange(pop)%>%
   ggplot(aes(x=id, y=q.value, fill=factor(k)))+
   #ggplot(aes(x=id, y=q.value, fill=factor(pop)))+
@@ -114,7 +109,7 @@ meanq.df%>%
           axis.ticks=element_blank(), 
           axis.line=element_blank(),
           axis.title=element_blank())+
-    facet_wrap(~pop, scales="free")
+    facet_wrap(~pop,scale="free")
 
 meanq.df%>%
   filter(k.value.run==3) %>%
