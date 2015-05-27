@@ -67,6 +67,19 @@ for (i in 1:length(meanq.files)){
   
 }
 
+# assign membership
+
+membership<-c()
+for (i in 1:length(meanq.df$id)){
+  k.value <- meanq.df[i,]$k.value.run
+  member.columns <- meanq.df[i,4:(4+(k.value-1))]
+  member.cluster<-as.numeric(which.max(member.columns))
+  membership <- c(membership, member.cluster)
+}
+
+member.data <- data.frame(meanq.df, membership)
+write.table(member.data, "whtcmn_gb2015_membership.txt")
+
 meanq.df <- melt(meanq.df, 
           id.vars=c("pop","id","k.value.run"),
           variable.name = "k",
@@ -79,14 +92,17 @@ library("dplyr")
 meanq.df <- meanq.df %>% 
   filter(!is.na(q.value))
 
-meanq.df.exag <- meanq.df
-
-meanq.df.exag[meanq.df.exag$k==3 & meanq.df.exag$k.value.run==3, ]$q.value <- meanq.df.exag[meanq.df.exag$k==3 & meanq.df.exag$k.value.run==3, ]$q.value
 
 # DISTRUCT-type plot
 
-meanq.df%>%
+
+meanq.df %>%
   filter(k.value.run==3) %>%
+  group_by(id) %>%
+  
+
+meanq.df%>%
+  filter(k.value.run==2) %>%
   arrange(pop)%>%
   ggplot(aes(x=id, y=q.value, fill=factor(k)))+
   #ggplot(aes(x=id, y=q.value, fill=factor(pop)))+
@@ -101,7 +117,7 @@ meanq.df%>%
     facet_wrap(~pop, scales="free")
 
 meanq.df%>%
-  filter(k.value.run==2) %>%
+  filter(k.value.run==3) %>%
   group_by(pop,id) %>%
   mutate(q.max=max(q.value))%>%
   ungroup() %>%
