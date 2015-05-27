@@ -4,3 +4,5 @@
 *.bam
 *.bai
 *.vcf
+*.ped
+*.map
