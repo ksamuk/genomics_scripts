@@ -8,8 +8,11 @@ library("magrittr")
 library("ggplot2")
 library("hierfstat")
 library("data.table")
+library("parallel")
 
 # read vcf file to 1/1 snp table
+
+rm(list=ls())
 
 vcf.file <- list.files(pattern=".vcf")
 whtcmn.gbs <- readGT(vcf.file)
@@ -60,9 +63,13 @@ pop <- id %>%
   gsub("\\d","",.) %>%
   gsub("[:punct:]","",.)
 
-whtcmn.df <- data.frame(pop, id, lg, pos, ref, alt, geno1, geno2)
+rm(whtcmn.gbs)
 
+whtcmn.df <- data.frame(pop, id, lg, pos, ref, alt, geno1, geno2)
 whtcmn.df %<>% arrange(lg,pop,id,pos)
+
+rm(list=c("geno1","geno2","id","pop","alt","ref","pos","lg"))
+gc()
 
 #fix factor NAs
 whtcmn.df$geno1[whtcmn.df$geno1=="NA"] <- NA
@@ -76,9 +83,6 @@ whtcmn.df$alt.count <- as.numeric(whtcmn.df$geno1==1) + as.numeric(whtcmn.df$gen
 
 # aaaah..that's better.
 
-rm(list=c("whtcmn.gbs","geno1","geno2","id","pop","alt","ref","pos","lg"))
-gc()
-
 #assign genotypes
 build.geno <- function (x){
   if(is.na(x[7])|is.na(x[8])){
@@ -88,33 +92,52 @@ build.geno <- function (x){
   }
 }
 
+# convert to iupac
+geno.iupac <- function (x){
+  gen.vec <- strsplit(x, split="") %>% unlist
+  if (gen.vec[1]==gen.vec[2]){
+    return(gen.vec[1])
+  }else{
+    c("A","C","G","T") %in% gen.vec %>%
+      c("A","C","G","T")[.] %>%
+      paste0(collapse="") %>% equals (c("AC","AG","AT","CG","CT","GT")) %>%
+      c("M","R","W","S","Y","K")[.] %>% return
+  }
+}
+  
 whtcmn.df$genotype <- rep("NN",length(whtcmn.df$genotype))
 whtcmn.df$genotype <- apply(whtcmn.df[1:10,], MARGIN=1, build.geno)
 
-whtcmn.df.fixed %>%
-  
-
-
-apply(whtcmn.df[1:10,], MARGIN=1, build.geno)
+whtcmn.df$genotype.iupac <- mclapply(as.list(whtcmn.df$genotype), geno.iupac) %>% unlist
+whtcmn.df$genotype.iupac %<>% as.character
 
 # write geno.df to file
-
 gz1 <- gzfile("whtcmn.df.gz", "w")
 write.csv(whtcmn.df, gz1, row.names = FALSE)
 close(gz1)
 
-whtcmn.df <- read.csv("whtcmn.df.gz", row.names = NULL)
+### START HERE IF .GZ EXISTS
+
+whtcmn.df <- read.csv("whtcmn.df.gz", row.names = NULL, stringsAsFactors = FALSE)
 
 #output "fake" FASTA file
 
-df.to.fasta2 <- function (pop, id , genotype) {
+df.to.fasta <- function (pop, id , genotype) {
   header <- paste0(">",pop[1],"_",id[1],"\n")
-  dna <- paste0(genotype,collapse="")
+  dna <- paste0(genotype, collapse="")
   return(paste0(header,dna))
 }
 
-data.table(whtcmn.df)[, list(fasta=df.to.fasta2(pop,id,genotype)), by=key(whtcmn.df)]$fasta %>%
-writeLines(file("test.fasta"))
+df.to.fasta.thin <- function (pop, id , genotype) {
+  if (rnorm(1)>0){
+  header <- paste0(">",pop[1],"_",id[1],"\n")
+  dna <- paste0(genotype, collapse="")
+  return(paste0(header,dna))
+  }
+}
+
+data.table(whtcmn.df)[, list(fasta=df.to.fasta.thin(pop,id,genotype.iupac)), by=id]$fasta %>%
+writeLines(file("whtcmn.thin.fasta"))
 
 whtcmn.df %>%
   filter(pop=="AL") %>%
@@ -183,7 +206,7 @@ names(whtcmn.wc)[1] <- "pop"
 #had to manually do this part..
 # write to file, go in and fix header
 whtcmn.wc <- write.fstat("whtcmn.dat")
-whtcmn.fst <- read.fstat("whtcmn.dat")
+whtcmn.fst <- read.fstat("test.dat")
 
 whtcmn.fst %<>%
   filter(!is.na(Pop))
