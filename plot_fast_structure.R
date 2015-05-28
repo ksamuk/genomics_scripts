@@ -4,6 +4,7 @@ library("ggplot2")
 library("dplyr")
 library("plyr")
 library("reshape2")
+library("devtools")
 
 # a directory containing sample id files (single column of IDs from ped file) and meanq files
 output.dir <- "fastStructure"
@@ -93,23 +94,44 @@ meanq.df <- meanq.df %>%
   filter(!is.na(q.value))
 
 
+
 # DISTRUCT-type plot
 
-
 meanq.df%>%
-  filter(k.value.run==3) %>%
+  filter(k.value.run==2) %>%
   arrange(pop)%>%
+  filter(!pop=="MM",!pop=="NHR",!pop=="QR",!pop=="MM", !pop=="LD") %>%
   ggplot(aes(x=id, y=q.value, fill=factor(k)))+
   #ggplot(aes(x=id, y=q.value, fill=factor(pop)))+
     geom_bar(stat="identity", width=1)+
     #geom_bar(aes(x=id,fill=pop, y=.01),stat="identity",width=1,position="stack")+
     #geom_text(aes(label=pop))+
     theme_classic()+
-    theme(axis.text.x=element_blank(), 
+    theme(axis.text=element_blank(), 
           axis.ticks=element_blank(), 
           axis.line=element_blank(),
-          axis.title=element_blank())+
+          axis.title=element_blank(),
+          strip.text=element_text(size=22),
+          legend.position="none")+
     facet_wrap(~pop,scale="free")
+
+meanq.df%>%
+  filter(k.value.run==2) %>%
+  arrange(pop,k,q.value)%>%
+  ggplot(aes(x=id, y=q.value, fill=factor(k)))+
+  #ggplot(aes(x=id, y=q.value, fill=factor(pop)))+
+  geom_bar(stat="identity", width=1)+
+  #geom_bar(aes(x=id,fill=pop, y=.01),stat="identity",width=1,position="stack")+
+  #geom_text(aes(label=pop))+
+  theme_classic()+
+  theme(axis.text.x=element_blank(), 
+        axis.ticks=element_blank(), 
+        axis.line=element_blank(),
+        axis.title=element_blank())+
+  facet_wrap(~pop,scale="free")
+
+
+
 
 meanq.df%>%
   filter(k.value.run==3) %>%
