@@ -111,8 +111,7 @@ meanq.df%>%
           axis.ticks=element_blank(), 
           axis.line=element_blank(),
           axis.title=element_blank(),
-          strip.text=element_text(size=22),
-          legend.position="none")+
+          strip.text=element_text(size=22))+
     facet_wrap(~pop,scale="free")
 
 meanq.df%>%
